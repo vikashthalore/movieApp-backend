@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import connectDB from './config/connectDB.js';
 import movieRouter from './routes/movie.routes.js';
 import adminRouter from './routes/admin.routes.js';
-import cors from 'cors';
+import cors from "cors";
 
 dotenv.config();
 const app = express();
