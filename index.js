@@ -9,21 +9,21 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Allowed Origins
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "https://movie-admin.netlify.app",
   "https://movieapp.vercel.app",
-  "https://rococo-lily-eabaa3.netlify.app", // ✅ Your Netlify frontend URL
+  "https://rococo-lily-eabaa3.netlify.app",
 ];
 
-// ✅ CORS Setup
+// ✅ Global CORS setup
 app.use(
   cors({
-    origin: (origin, callback) => {
+    origin: function (origin, callback) {
       if (!origin) return callback(null, true);
       const netlifyPattern = /^https:\/\/([a-z0-9-]+)\.netlify\.app$/i;
+
       if (allowedOrigins.includes(origin) || netlifyPattern.test(origin)) {
         console.log("✅ Allowed CORS for:", origin);
         callback(null, true);
@@ -32,22 +32,27 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
 
-app.use(express.json());
+// ❌ Remove this → app.options("*", cors()); ❌
+// ✅ Or replace with:
+app.options(/.*/, cors());
 
-// ✅ Routes
+app.use(express.json());
 app.use("/api/movies", movieRouter);
 app.use("/api/admin", adminRouter);
 
-// ✅ Fallback route (Express 5 safe)
-app.use((req, res) => {
+app.get("/", (req, res) => {
   res.status(200).send("🎬 Movie Backend API Running Successfully!");
 });
 
-// ✅ Start Server
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: "Route not found" });
+});
+
 app.listen(PORT, async () => {
   await connectDB();
   console.log(`✅ Server running on port ${PORT}`);
