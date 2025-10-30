@@ -9,37 +9,25 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:5174",
-  "https://movie-admin.netlify.app",
-  "https://movieapp.vercel.app",
-  "https://rococo-lily-eabaa3.netlify.app",
-];
-
-// ✅ Global CORS setup
+// ✅ Simple and stable CORS setup for Vercel
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-      const netlifyPattern = /^https:\/\/([a-z0-9-]+)\.netlify\.app$/i;
-
-      if (allowedOrigins.includes(origin) || netlifyPattern.test(origin)) {
-        console.log("✅ Allowed CORS for:", origin);
-        callback(null, true);
-      } else {
-        console.warn("❌ Blocked CORS for:", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://movie-admin.netlify.app",
+      "https://movieapp.vercel.app",
+      "https://rococo-lily-eabaa3.netlify.app",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
 
-// ❌ Remove this → app.options("*", cors()); ❌
-// ✅ Or replace with:
+// ✅ Handle OPTIONS preflight requests globally
 app.options(/.*/, cors());
+
 
 app.use(express.json());
 app.use("/api/movies", movieRouter);
