@@ -15,7 +15,7 @@ const allowedOrigins = [
   "http://localhost:5174",
   "https://movie-admin.netlify.app",
   "https://movieapp.vercel.app",
-  "https://endearing-cajeta-1cbabb.netlify.app",
+  "https://rococo-lily-eabaa3.netlify.app", // ✅ Your Netlify frontend URL
 ];
 
 // ✅ CORS Setup
