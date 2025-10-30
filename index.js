@@ -17,7 +17,7 @@ app.use(
       "http://localhost:5174",
       "https://movie-admin.netlify.app",
       "https://movieapp.vercel.app",
-      "https://rococo-lily-eabaa3.netlify.app",
+      "https://aquamarine-kleicha-91beb2.netlify.app/",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
