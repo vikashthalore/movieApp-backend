@@ -13,6 +13,7 @@ app.use(
     origin: [
       "https://movie-admin-frontend.vercel.app",
       "https://movie-six-azure.vercel.com",
+      "https://movie-d5l3.vercel.app",
       "http://localhost:5173",
       "http://localhost:5174",
     ],
