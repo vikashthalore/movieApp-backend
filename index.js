@@ -1,22 +1,20 @@
-// index.js (Vercel Serverless Ready)
+// index.js
 import express from "express";
 import cors from "cors";
-import dbConnect from "./config/dbConnect.js"; // ← आपका नया dbConnect
+import dbConnect from "./config/dbConnect.js";
 import movieRouter from "./routes/movie.routes.js";
 import adminRouter from "./routes/admin.routes.js";
 
 const app = express();
 
-// CORS - Allow all your frontends
+// CORS - Allow ALL your frontends
 app.use(
   cors({
     origin: [
+      "https://movie-admin-frontend.vercel.app",
+      "https://movie-six-azure.vercel.com",
       "http://localhost:5173",
       "http://localhost:5174",
-      "https://movie-d5l3.vercel.app",
-      "https://movie-admin-frontend.vercel.app",
-      "https://movie-six-azure.vercel.app",
-      "https://movie-admin-frontend-mbehgah76-vikashs-projects-b626ec94.vercel.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -24,21 +22,21 @@ app.use(
   })
 );
 
-// Handle preflight OPTIONS globally
+// Handle preflight
 app.options("*", cors());
 
-// Body parser with 10MB limit (for images)
+// Body parser - 10MB limit
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
-// DB Connect on every request (Vercel Serverless)
+// DB Connect on every request
 app.use(async (req, res, next) => {
   try {
-    await dbConnect(); // ← हर रिक्वेस्ट पर connect
+    await dbConnect();
     next();
   } catch (error) {
-    console.error("DB Connection Failed:", error);
-    return res.status(500).json({ success: false, message: "Database connection failed" });
+    console.error("DB Error:", error);
+    return res.status(500).json({ success: false, message: "DB Connection Failed" });
   }
 });
 
@@ -46,17 +44,17 @@ app.use(async (req, res, next) => {
 app.use("/api/movies", movieRouter);
 app.use("/api/admin", adminRouter);
 
-// Home route
+// Home
 app.get("/", (req, res) => {
-  res.status(200).json({ success: true, message: "Movie Backend API Running Successfully!" });
+  res.json({ success: true, message: "Backend Live!" });
 });
 
-// 404 handler
+// 404
 app.use("*", (req, res) => {
   res.status(404).json({ success: false, message: "Route not found" });
 });
 
-// Export for Vercel (NO app.listen!)
+// EXPORT FOR VERCEL
 export default app;
 
 
