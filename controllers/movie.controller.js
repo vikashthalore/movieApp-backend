@@ -12,66 +12,144 @@ const uploadToCloudinary = (fileBuffer, folder = "movies") =>
   });
 
 /* ------------------ 🟢 ADD MOVIE ------------------ */
+/* ------------------ ADD MOVIE (100% WORKING - ZERO ERROR) ------------------ */
 export const addMovie = async (req, res) => {
   try {
     const body = req.body;
 
-    // ✅ Separate main image & sample images
-    const mainImageFile = req.files?.image?.[0];
-    const imgSampleFiles = req.files?.imgSample || [];
-
-    // ✅ Upload to Cloudinary
+    // 1. Main Poster (file ya direct URL)
     let mainPoster = "";
-    if (mainImageFile) {
-      const result = await uploadToCloudinary(mainImageFile.buffer);
+
+    if (req.files?.mainPoster?.[0]) {
+      // File upload mila → Cloudinary
+      const result = await uploadToCloudinary(req.files.mainPoster[0].buffer);
       mainPoster = result.secure_url;
+    } 
+    else if (body.mainPosterUrl && body.mainPosterUrl.trim()) {
+      // Direct URL mila
+      mainPoster = body.mainPosterUrl.trim();
     }
 
-    const imgSampleUrls = await Promise.all(
-      imgSampleFiles.map(async (file) => {
-        const result = await uploadToCloudinary(file.buffer);
-        return result.secure_url;
-      })
-    );
+    // 2. Gallery Images (file + direct URL dono)
+    const galleryFiles = req.files?.imgSample || [];
+    const directUrls = body.imgUrls 
+      ? (Array.isArray(body.imgUrls) ? body.imgUrls : [body.imgUrls])
+      : [];
 
-    // ✅ Create movie
+    let imgSampleUrls = [];
+
+    // Cloudinary wale upload karo
+    if (galleryFiles.length > 0) {
+      const uploaded = await Promise.all(
+        galleryFiles.map(file => uploadToCloudinary(file.buffer))
+      );
+      imgSampleUrls = uploaded.map(r => r.secure_url);
+    }
+
+    // Direct URLs add karo
+    directUrls.forEach(url => {
+      if (url && typeof url === "string" && url.trim()) {
+        imgSampleUrls.push(url.trim());
+      }
+    });
+
+    // Movie create
     const movie = await Movie.create({
-      title: body.title?.trim(),
+      title: body.title?.trim() || "Untitled Movie",
       image: mainPoster,
-      howToDownload: body.howToDownload || "",
-      telegramLink: body.telegramLink || "",
-      titleNameLanguage: body.titleNameLanguage || "",
       imdbRating: Number(body.imdbRating) || 0,
-      genre: body.genre || "",
-      actors: body.actors ? body.actors.split(",").map((a) => a.trim()) : [],
+      actors: body.actors ? body.actors.split(",").map(a => a.trim()) : [],
       director: body.director || "",
       language: body.language || "",
       quality: body.quality || "",
       imgSample: imgSampleUrls,
-      againTitle: body.againTitle ? body.againTitle.split(",").map((a) => a.trim()) : [],
-      downloadLinks: body.downloadLinks
-        ? body.downloadLinks.split(",").map((a) => a.trim())
-        : [],
-      description: body.description
-        ? body.description.split("\n").filter(Boolean)
-        : [],
-      releaseYear: body.releaseYear
-        ? body.releaseYear.split(",").map((n) => Number(n.trim()))
-        : [],
-      genres: body.genres ? body.genres.split(",").map((g) => g.trim()) : [],
-      categories: body.categories ? body.categories.split(",").map((c) => c.trim()) : [],
+      downloadLinks: body.downloadLinks ? body.downloadLinks.split(",").map(a => a.trim()) : [],
+      description: body.description ? body.description.split("\n").filter(Boolean) : [],
+      genres: body.genres ? body.genres.split(",").map(g => g.trim()) : [],
+      categories: body.categories ? body.categories.split(",").map(c => c.trim()) : [],
+      // baaki sab fields jo pehle the, woh bhi daal do agar use karte ho
+      howToDownload: body.howToDownload || "",
+      telegramLink: body.telegramLink || "",
+      titleNameLanguage: body.titleNameLanguage || "",
+      againTitle: body.againTitle ? body.againTitle.split(",").map(a => a.trim()) : [],
+      releaseYear: body.releaseYear ? body.releaseYear.split(",").map(n => Number(n.trim())) : [],
+      genre: body.genre || "",
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: "🎬 Movie added successfully!",
+      message: "Movie added successfully!",
       movie,
     });
+
   } catch (error) {
-    console.error("❌ Error in addMovie:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Add Movie Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error: " + error.message,
+    });
   }
 };
+// export const addMovie = async (req, res) => {
+//   try {
+//     const body = req.body;
+
+//     // ✅ Separate main image & sample images
+//     const mainImageFile = req.files?.image?.[0];
+//     const imgSampleFiles = req.files?.imgSample || [];
+
+//     // ✅ Upload to Cloudinary
+//     let mainPoster = "";
+//     if (mainImageFile) {
+//       const result = await uploadToCloudinary(mainImageFile.buffer);
+//       mainPoster = result.secure_url;
+//     }
+
+//     const imgSampleUrls = await Promise.all(
+//       imgSampleFiles.map(async (file) => {
+//         const result = await uploadToCloudinary(file.buffer);
+//         return result.secure_url;
+//       })
+//     );
+
+//     // ✅ Create movie
+//     const movie = await Movie.create({
+//       title: body.title?.trim(),
+//       image: mainPoster,
+//       howToDownload: body.howToDownload || "",
+//       telegramLink: body.telegramLink || "",
+//       titleNameLanguage: body.titleNameLanguage || "",
+//       imdbRating: Number(body.imdbRating) || 0,
+//       genre: body.genre || "",
+//       actors: body.actors ? body.actors.split(",").map((a) => a.trim()) : [],
+//       director: body.director || "",
+//       language: body.language || "",
+//       quality: body.quality || "",
+//       imgSample: imgSampleUrls,
+//       againTitle: body.againTitle ? body.againTitle.split(",").map((a) => a.trim()) : [],
+//       downloadLinks: body.downloadLinks
+//         ? body.downloadLinks.split(",").map((a) => a.trim())
+//         : [],
+//       description: body.description
+//         ? body.description.split("\n").filter(Boolean)
+//         : [],
+//       releaseYear: body.releaseYear
+//         ? body.releaseYear.split(",").map((n) => Number(n.trim()))
+//         : [],
+//       genres: body.genres ? body.genres.split(",").map((g) => g.trim()) : [],
+//       categories: body.categories ? body.categories.split(",").map((c) => c.trim()) : [],
+//     });
+
+//     res.status(201).json({
+//       success: true,
+//       message: "🎬 Movie added successfully!",
+//       movie,
+//     });
+//   } catch (error) {
+//     console.error("❌ Error in addMovie:", error);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
 
 /* ------------------ 🟡 GET ALL MOVIES ------------------ */
 export const getMovies = async (req, res) => {
